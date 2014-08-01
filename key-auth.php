@@ -50,6 +50,8 @@ class JSON_Key_Auth {
 		if ( $signature_gen != $signature ) {
 			return false;
 		}
+
+		return $user_id;
 	}
 
 	/**

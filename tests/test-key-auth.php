@@ -12,20 +12,17 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
-		$this->author = $this->factory->user->create( array( 'role' => 'author' ) );
-		$this->contributor = $this->factory->user->create( array( 'role' => 'contributor' ) );
+		$this->user = $this->factory->user->create( array( 'role' => 'user' ) );
 
-		$this->authorapikey = 'asdf123';
-		$this->contributorkey = 'asdfg12345';
+		$this->userapikey = 'asdf123';
 
-		$this->authorsecret = 'fdsa4321';
-		$this->contributorsecret = 'gfdsa54321';
+		$this->usersecret = 'fdsa4321';
 
-		update_user_meta( $this->author, 'json_api_key', $this->authorapikey );
-		update_user_meta( $this->author, 'json_shared_secret', $this->authorsecret );
+		update_user_meta( $this->user, 'json_api_key', $this->userapikey );
+		update_user_meta( $this->user, 'json_shared_secret', $this->usersecret );
 
-		update_user_meta( $this->contributor, 'json_api_key', $this->contributorkey );
-		update_user_meta( $this->contributor, 'json_shared_secret', $this->contributorsecret );
+		$this->fake_server = $this->getMock('WP_JSON_Server');
+		$this->endpoint = new WP_JSON_Posts( $this->fake_server );
 	}
 
 	public function test_user_not_found() {
@@ -33,6 +30,21 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 	}
 
 	public function test_user_found() {
-		$this->assertEquals( $this->author, JSON_Key_Auth::findUserIdByKey( $this->authorapikey ) );
+		$this->assertEquals( $this->user, JSON_Key_Auth::findUserIdByKey( $this->userapikey ) );
+	}
+
+	public function test_authentication_success() {
+		$signature_args = array(
+			'api_key' => $this->userapikey,
+			'timestamp' => 1234567,
+			'request_method' => 'GET',
+			'request_uri' => 'example.org/wp-json',
+		);
+		$sent_signature = md5( json_encode( $signature_args ) . $this->usersecret );
+
+		$this->assertEquals( $sent_signature, JSON_Key_Auth::generateSignature( $signature_args, $this->usersecret ) );
+
+
+		// TODO: Add assertions for the actual request.
 	}
 }
