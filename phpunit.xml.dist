@@ -7,7 +7,8 @@
         convertWarningsToExceptions="true"
         >
     <php>
-        <env name="WP_DEVELOP_DIR" value="/Users/paul/Development/wordpress-dev/wordpress-dev" />
+        <env name="WP_DEVELOP_DIR" value="/blah/blah/blah/wordpress-dev" />
+        <env name="WP_API_PLUGIN_PATH" value="/blah/blah/wp-api/wp-content/plugins/wp-api/plugin.php" />
     </php>
     <testsuites>
         <!-- Default test suite to run all tests -->
