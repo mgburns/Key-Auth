@@ -16,7 +16,6 @@
 
 class JSON_Key_Auth {
 
-
 	/**
 	 * The primary handler for user authentication.
 	 *
@@ -30,7 +29,7 @@ class JSON_Key_Auth {
 			return $user;
 		}
 
-		if ( !isset( $_SERVER['HTTP_X_API_KEY'] ) ) {
+		if ( !isset( $_SERVER['HTTP_X_API_KEY'] ) || !isset( $_SERVER['HTTP_X_API_TIMESTAMP'] ) || !isset( $_SERVER['HTTP_X_API_SIGNATURE'] ) ) {
 			return $user;
 		}
 
@@ -46,8 +45,6 @@ class JSON_Key_Auth {
 		);
 
 		$signature_gen = self::generateSignature( $signature_args, $user_secret );
-
-
 		$signature = $_SERVER['HTTP_X_API_SIGNATURE'];
 
 		if ( $signature_gen != $signature ) {
@@ -84,7 +81,7 @@ class JSON_Key_Auth {
 			'fields' => array( 'ID' ),
 		);
 		$user = get_users( $user_args );
-		if ( is_array( $user ) ) {
+		if ( is_array( $user ) && !empty( $user ) ) {
 			return $user[0]->ID;
 		}
 
@@ -92,4 +89,4 @@ class JSON_Key_Auth {
 	}
 }
 
-//add_filter( 'determine_current_user', array( 'JSON_Key_Auth', 'authHandler' ), 20 );
+add_filter( 'determine_current_user', array( 'JSON_Key_Auth', 'authHandler' ), 20 );
