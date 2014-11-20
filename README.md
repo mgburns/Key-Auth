@@ -2,6 +2,8 @@
 
 Access your WordPress site's data through an easy-to-use HTTP REST API.
 
+**Important Note:** This is a community project, not an official REST API team project. Please note that this may have security and usability issues.
+
 ## About
 
 Allows Key Authentication access to the WordPress JSON API.
