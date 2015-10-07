@@ -1,8 +1,8 @@
-# WP-API Key Authentication Plugin
+# WordPress REST API Key Authentication Plugin
 
 Access your WordPress site's data through an easy-to-use HTTP REST API.
 
-**Important Note:** This is a community project, not an official REST API team project. Please note that this may have security and usability issues.
+This fork of the [WP API Key Authentication plugin](https://github.com/WP-API/Key-Authentication) adds several improvements to the original plugin.
 
 ## About
 
@@ -17,4 +17,4 @@ to use the plugin, as it uses custom rewrite rules to power the API.
 
 All tickets for the project are being tracked on [GitHub][].
 
-[GitHub]: https://github.com/WP-API/Key-Auth
+[GitHub]: https://github.com/mgburns/Key-Auth

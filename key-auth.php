@@ -2,10 +2,10 @@
 /**
  * Plugin Name: JSON API Key Authentication
  * Description: API/Secret Key Authentication handler for the JSON API
- * Author: Paul Hughes and WP API Team
- * Author URI: https://github.com/WP-API
+ * Author: Mike Burns, Paul Hughes and WP API Team
+ * Author URI: https://github.com/mgburns
  * Version: 0.1
- * Plugin URI: https://github.com/WP-API/Key-Auth
+ * Plugin URI: https://github.com/mgburns/Key-Auth
  */
 
 /**
