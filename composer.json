@@ -1,0 +1,13 @@
+{
+    "name": "mgburns/key-auth",
+    "description": "Hardened fork of the WP-API Key Authentication plugin",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mike Burns",
+            "email": "mike.burns@upstatement.com"
+        }
+    ],
+    "require": {}
+}
