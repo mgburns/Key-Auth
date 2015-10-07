@@ -2,7 +2,7 @@
 
 Access your WordPress site's data through an easy-to-use HTTP REST API.
 
-This fork of the [WP API Key Authentication plugin](https://github.com/WP-API/Key-Authentication) adds several improvements to the original plugin.
+This fork of the [WP API Key Authentication plugin](https://github.com/WP-API/Key-Auth) adds several improvements to the original plugin.
 
 ## About
 
