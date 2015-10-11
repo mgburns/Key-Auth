@@ -34,7 +34,7 @@ class JSON_Key_Auth {
 		}
 
 		$user_id = self::findUserIdByKey( $_SERVER['HTTP_X_API_KEY'] );
-		$user_secret = get_user_meta( $user_id, 'json_shared_secret' );
+		$user_secret = get_user_meta( $user_id, 'json_shared_secret', true );
 
 		// Check for the proper HTTP Parameters
 		$signature_args = array(
