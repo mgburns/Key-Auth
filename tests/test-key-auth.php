@@ -35,7 +35,7 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 			'request_method' => 'GET',
 			'request_uri' => 'example.org/wp-json',
 		);
-		$sent_signature = md5( json_encode( $signature_args ) . $this->usersecret );
+		$sent_signature = $this->generate_test_signature( $this->userapikey, $this->usersecret, $signature_args['timestamp'], $signature_args['request_method'], $signature_args['request_uri'] );
 
 		$this->assertEquals( $sent_signature, JSON_Key_Auth::generateSignature( $signature_args, $this->usersecret ) );
 	}
@@ -68,6 +68,6 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 			'request_uri' => $uri,
 		);
 
-		return md5( json_encode( $signature_args ) . $secret );
+		return hash_hmac( 'sha256', json_encode( $signature_args ), $secret );
 	}
 }

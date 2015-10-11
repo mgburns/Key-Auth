@@ -62,7 +62,7 @@ class JSON_Key_Auth {
 	 * @return string
 	 */
 	public static function generateSignature( $args, $secret ) {
-		return md5( json_encode( $args ) . $secret );
+		return hash_hmac( 'sha256',  json_encode( $args ), $secret );
 	}
 
 	/**
