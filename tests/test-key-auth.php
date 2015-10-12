@@ -62,12 +62,12 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 
 	public function generate_test_signature( $key, $secret, $timestamp, $method, $uri ) {
 		$signature_args = array(
-			'api_key' => $key,
-			'timestamp' => $timestamp,
-			'request_method' => $method,
-			'request_uri' => $uri,
+			$key,
+			$timestamp,
+			$method,
+			$uri,
 		);
 
-		return hash_hmac( 'sha256', json_encode( $signature_args ), $secret );
+		return hash_hmac( 'sha256', implode( "\n", $signature_args ), $secret );
 	}
 }

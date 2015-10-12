@@ -38,10 +38,10 @@ class JSON_Key_Auth {
 
 		// Check for the proper HTTP Parameters
 		$signature_args = array(
-			'api_key' => $_SERVER['HTTP_X_API_KEY'],
-			'timestamp' => $_SERVER['HTTP_X_API_TIMESTAMP'],
-			'request_method' => $_SERVER['REQUEST_METHOD'],
-			'request_uri' => $_SERVER['REQUEST_URI'],
+			$_SERVER['HTTP_X_API_KEY'],
+			(int) $_SERVER['HTTP_X_API_TIMESTAMP'],
+			$_SERVER['REQUEST_METHOD'],
+			$_SERVER['REQUEST_URI'],
 		);
 
 		$signature_gen = self::generateSignature( $signature_args, $user_secret );
@@ -56,13 +56,15 @@ class JSON_Key_Auth {
 
 	/**
 	 * @param array $args The arguments used for generating the signature. They should be, in order:
-	 *                    'api_key', 'timestamp', 'request_method', and 'request_uri'.
-	 *                    Timestamp should be the timestamp passed in the reques.
+	 *  - API Key
+	 *  - Timestamp (passed in the request)
+	 *  - Request method
+	 *  - Request URI
 	 * @param string $secret The shared secret we are using to generate the hash.
 	 * @return string
 	 */
 	public static function generateSignature( $args, $secret ) {
-		return hash_hmac( 'sha256',  json_encode( $args ), $secret );
+		return hash_hmac( 'sha256', implode( "\n", $args ), $secret );
 	}
 
 	/**
