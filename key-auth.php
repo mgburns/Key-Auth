@@ -98,45 +98,95 @@ class JSON_Key_Auth {
 	public static function editUser( $user ) {
 		$key = get_user_meta( $user->ID, 'json_api_key', true );
 		$secret = get_user_meta( $user->ID, 'json_shared_secret', true );
-		$action_label = ( ! empty( $key ) && ! empty( $secret ) ) ? 'Revoke' : 'Generate';
+		$key_exists = ( ! empty( $key ) && ! empty( $secret ) );
+		$action_label = ( $key_exists ) ? 'Revoke' : 'Generate';
 ?>
 <h3><?php _e('API Keys'); ?></h3>
 <table class="form-table">
 	<tr class="key-auth-key-wrap">
 		<th><label for="key-auth-key"><?php _e( 'Access Key' ); ?></label></th>
 		<td>
-			<input type="text" name="key-auth-key" id="key-auth-key" class="regular-text" value="<?php esc_attr_e( $key ); ?>" readonly="readonly" data-pw="<?php esc_attr_e( wp_generate_password( 12, false ) ); ?>" />
+			<input type="text" name="key-auth-key" id="key-auth-key" class="regular-text" value="<?php esc_attr_e( $key ); ?>" data-pw="<?php esc_attr_e( wp_generate_password( 12, false ) ); ?>" />
+			<p class="description hide-if-js">Should be 12 characters long.</p>
 		</td>
 	</tr>
 	<tr class="key-auth-secret-wrap">
 		<th><label for="key-auth-secret"><?php _e( 'Shared Secret' ); ?></label></th>
 		<td>
-			<input type="text" name="key-auth-secret" id="key-auth-secret" class="regular-text" value="<?php esc_attr_e( $secret ); ?>" readonly="readonly" data-pw="<?php esc_attr_e( wp_generate_password( 48, false ) ); ?>" />
+			<input type="password" name="key-auth-secret" id="key-auth-secret" class="regular-text hide-if-js" value="<?php esc_attr_e( $secret ); ?>" data-pw="<?php esc_attr_e( wp_generate_password( 48, false ) ); ?>" />
+			<input type="text" class="regular-text hide-if-no-js" id="key-auth-secret-text" readonly="readonly" value="<?php esc_attr_e( $secret ); ?>">
+			<p class="description hide-if-js">Should be 48 characters long.</p>
+			<button type="button" id="key-auth-secret-toggle" class="button button-secondary wp-hide-pw hide-if-no-js" data-toggle="0" aria-label="Hide shared secret">
+				<span class="dashicons dashicons-hidden"></span>
+				<span class="text">Hide</span>
+			</button>
 		</td>
 	</tr>
 	<tr class="key-auth-actions-wrap">
 		<th></th>
 		<td>
-			<button id="key-auth-action" type="button" class="button button-secondary"><?php esc_html_e( $action_label ); ?></button>
+			<button id="key-auth-action" type="button" class="button button-secondary hide-if-no-js"><?php esc_html_e( $action_label ); ?></button>
 		</td>
 	</tr>
 </table>
 <script type="text/javascript">
 (function ($) {
-	var $key = $('#key-auth-key'), $secret = $('#key-auth-secret');
+	var $key = $('#key-auth-key'), $secret = $('#key-auth-secret'),
+		$secretToggle = $('#key-auth-secret-toggle'),
+		$secretText = $('#key-auth-secret-text');
+
 	$('#key-auth-action').on('click', function (e) {
 		var $button = $(e.target);
 		e.preventDefault();
 		if ('Generate' == $button.text()) {
 			$key.val($key.data('pw'));
 			$secret.val($secret.data('pw'));
+			$secretText.val($secret.data('pw'));
+			$secretToggle.show();
 			$button.text('Revoke');
 		} else if ('Revoke' == $button.text()) {
 			$key.val('');
 			$secret.val('');
+			$secretText.val('');
+			$secretToggle.hide();
 			$button.text('Generate');
 		}
 	});
+
+	$secretToggle.on('click', function (e) {
+		e.preventDefault();
+		$secret.toggle();
+		$secretText.toggle();
+
+		if (1 == parseInt($secretToggle.data('toggle'))) {
+			$secretToggle
+				.data('toggle', 0)
+				.attr('aria-label', 'Hide shared secret')
+				.find('> .text').text('Hide').end()
+				.find('> .dashicons')
+					.addClass('dashicons-hidden')
+					.removeClass('dashicons-visibility');
+		} else {
+			$secretToggle
+				.data('toggle', 1)
+				.attr('aria-label', 'Show shared secret')
+				.find('> .text').text('Show').end()
+				.find('> .dashicons')
+					.addClass('dashicons-visibility')
+					.removeClass('dashicons-hidden');
+		}
+	});
+
+	// Reverse no-js defaults
+	$key.prop('readonly', 'readonly');
+	$secret.prop('readonly', 'readonly');
+	$secretToggle.trigger('click');
+
+	// Hide shared secret toggle if no secret is set
+	if (!$secret.val()) {
+		$secretToggle.hide();
+	}
+
 }) (jQuery);
 </script>
 <?php
