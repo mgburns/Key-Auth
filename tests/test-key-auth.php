@@ -28,46 +28,51 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 		$this->assertEquals( $this->user, JSON_Key_Auth::findUserIdByKey( $this->userapikey ) );
 	}
 
-	public function test_generate_signature_match() {
-		$signature_args = array(
-			'api_key' => $this->userapikey,
-			'timestamp' => 1234567,
-			'request_method' => 'GET',
-			'request_uri' => 'example.org/wp-json',
-		);
-		$sent_signature = $this->generate_test_signature( $this->userapikey, $this->usersecret, $signature_args['timestamp'], $signature_args['request_method'], $signature_args['request_uri'] );
-
-		$this->assertEquals( $sent_signature, JSON_Key_Auth::generateSignature( $signature_args, $this->usersecret ) );
+	/**
+	 * @dataProvider post_provider
+	 */
+	public function test_normalized_body( $post, $expected ) {
+		$_POST = $post;
+		$this->assertEquals( $expected, JSON_Key_Auth::normalizedBody() );
 	}
 
-	public function test_auth_handler_success() {
+	/**
+	 * @dataProvider request_provider
+	 */
+	public function test_auth_handler( $method, $uri, $body, $timestamp ) {
 		$key = $this->userapikey;
 		$secret = $this->usersecret;
-		$timestamp = time();
-		$method = 'GET';
-		$uri = '/wp-json/wp/v2/users/me';
-
-		$this->setup_request( $key, $secret, $method, $uri, $timestamp );
-
+		$this->setup_request( $key, $secret, $method, $uri, $body, $timestamp );
 		$this->assertEquals( $this->user, JSON_Key_Auth::authHandler( null ) );
 	}
 
-	public function setup_request( $key, $secret, $method, $uri, $timestamp ) {
-		$_SERVER['HTTP_X_API_KEY'] = $key;
-		$_SERVER['HTTP_X_API_SIGNATURE'] = $this->generate_test_signature( $key, $secret, $timestamp, $method, $uri );
-		$_SERVER['HTTP_X_API_TIMESTAMP'] = $timestamp;
-		$_SERVER['REQUEST_METHOD'] = $method;
-		$_SERVER['REQUEST_URI'] = $uri;
+	public function post_provider() {
+		return array(
+			'normal'     => array( array( 'foo' => 'bar' ), http_build_query( array( 'foo' => 'bar' ) ) ),
+			'slashed'    => array( array( 'foo' => 'this \"is\" \\\'slashed\\\'' ), http_build_query( array( 'foo' => 'this "is" \'slashed\'' ) ) ),
+			'unsorted'   => array( array( 'uvw' => 'xyz', 'abc' => 'def' ), http_build_query( array( 'abc' => 'def', 'uvw' => 'xyz' ) ) ),
+			'uppercased' => array( array( 'FOO' => 'bar' ), http_build_query( array( 'foo' => 'bar' ) ) ),
+		);
 	}
 
-	public function generate_test_signature( $key, $secret, $timestamp, $method, $uri ) {
-		$signature_args = array(
-			$key,
-			$timestamp,
-			$method,
-			$uri,
+	public function request_provider() {
+		return array(
+			'get'  => array( 'GET', '/wp-json/wp/v2/users/me', array(), time() ),
+			'post' => array( 'POST', '/wp-json/wp/v2/posts', array( 'title' => 'Foo', 'content' => 'Bar' ), time() ),
 		);
+	}
 
-		return hash_hmac( 'sha256', implode( "\n", $signature_args ), $secret );
+	public function setup_request( $key, $secret, $method, $uri, $body, $timestamp ) {
+		$_POST = $body;
+
+		$normalized_body = JSON_Key_Auth::normalizedBody();
+		$signature = JSON_Key_Auth::generateSignature( array( $key, $timestamp, $method, $uri, $normalized_body ), $secret );
+
+		$_SERVER['REQUEST_METHOD'] = $method;
+		$_SERVER['REQUEST_URI'] = $uri;
+
+		$_SERVER['HTTP_X_API_KEY'] = $key;
+		$_SERVER['HTTP_X_API_SIGNATURE'] = $signature;
+		$_SERVER['HTTP_X_API_TIMESTAMP'] = $timestamp;
 	}
 }

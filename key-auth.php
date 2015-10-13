@@ -42,6 +42,7 @@ class JSON_Key_Auth {
 			(int) $_SERVER['HTTP_X_API_TIMESTAMP'],
 			$_SERVER['REQUEST_METHOD'],
 			$_SERVER['REQUEST_URI'],
+			self::normalizedBody(),
 		);
 
 		$signature_gen = self::generateSignature( $signature_args, $user_secret );
@@ -52,6 +53,23 @@ class JSON_Key_Auth {
 		}
 
 		return $user_id;
+	}
+
+	/**
+	 * Return normalized string representation of HTTP request body ($_POST).
+	 *
+	 * Normalization operations include:
+	 * - Strip slashes added by `wp_magic_quotes`
+	 * - Ensure $_POST keys are lowercase
+	 * - Sort $_POST by array keys
+	 *
+	 * The normalized array is then converted to a query string.
+	 */
+	public static function normalizedBody() {
+		$payload = wp_unslash( $_POST );
+		$payload = array_change_key_case( $payload, CASE_LOWER );
+		ksort( $payload );
+		return http_build_query( $payload );
 	}
 
 	/**
