@@ -30,12 +30,19 @@ class JSON_Key_Auth {
 		}
 
 		if ( !isset( $_SERVER['HTTP_X_API_KEY'] ) || !isset( $_SERVER['HTTP_X_API_TIMESTAMP'] ) || !isset( $_SERVER['HTTP_X_API_SIGNATURE'] ) ) {
-			return $user;
+			return false;
 		}
 
-
 		$user_id = self::findUserIdByKey( $_SERVER['HTTP_X_API_KEY'] );
+		if ( ! $user_id ) {
+			return false;
+		}
+
 		$user_secret = get_user_meta( $user_id, 'json_shared_secret', true );
+		if ( ! $user_secret ) {
+			return false;
+		}
+
 		$version = isset( $_SERVER['HTTP_X_API_VERSION'] ) ? $_SERVER['HTTP_X_API_VERSION'] : false;
 
 		$message = self::generateCanonicalRequest( $version );
