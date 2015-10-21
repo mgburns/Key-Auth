@@ -39,10 +39,10 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 	/**
 	 * @dataProvider request_provider
 	 */
-	public function test_auth_handler( $method, $uri, $body, $timestamp ) {
+	public function test_auth_handler( $method, $uri, $body, $timestamp, $version = null ) {
 		$key = $this->userapikey;
 		$secret = $this->usersecret;
-		$this->setup_request( $key, $secret, $method, $uri, $body, $timestamp );
+		$this->setup_request( $key, $secret, $method, $uri, $body, $timestamp, $version );
 		$this->assertEquals( $this->user, JSON_Key_Auth::authHandler( null ) );
 	}
 
@@ -58,21 +58,25 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 	public function request_provider() {
 		return array(
 			'get'  => array( 'GET', '/wp-json/wp/v2/users/me', array(), time() ),
+			'get_v1'  => array( 'GET', '/wp-json/wp/v2/users/me', array(), time(), '1' ),
 			'post' => array( 'POST', '/wp-json/wp/v2/posts', array( 'title' => 'Foo', 'content' => 'Bar' ), time() ),
+			'post_v1' => array( 'POST', '/wp-json/wp/v2/posts', array( 'title' => 'Foo', 'content' => 'Bar' ), time(), '1' ),
 		);
 	}
 
-	public function setup_request( $key, $secret, $method, $uri, $body, $timestamp ) {
+	public function setup_request( $key, $secret, $method, $uri, $body, $timestamp, $version = null ) {
 		$_POST = $body;
-
-		$normalized_body = JSON_Key_Auth::normalizedBody();
-		$signature = JSON_Key_Auth::generateSignature( array( $key, $timestamp, $method, $uri, $normalized_body ), $secret );
 
 		$_SERVER['REQUEST_METHOD'] = $method;
 		$_SERVER['REQUEST_URI'] = $uri;
 
 		$_SERVER['HTTP_X_API_KEY'] = $key;
-		$_SERVER['HTTP_X_API_SIGNATURE'] = $signature;
 		$_SERVER['HTTP_X_API_TIMESTAMP'] = $timestamp;
+		$_SERVER['HTTP_X_API_VERSION'] = $version;
+
+		$signature = JSON_Key_Auth::generateSignature( JSON_Key_Auth::generateCanonicalRequest( $version ), $secret, $version );
+
+		$_SERVER['HTTP_X_API_SIGNATURE'] = $signature;
+
 	}
 }

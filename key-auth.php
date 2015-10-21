@@ -33,19 +33,13 @@ class JSON_Key_Auth {
 			return $user;
 		}
 
+
 		$user_id = self::findUserIdByKey( $_SERVER['HTTP_X_API_KEY'] );
 		$user_secret = get_user_meta( $user_id, 'json_shared_secret', true );
+		$version = isset( $_SERVER['HTTP_X_API_VERSION'] ) ? $_SERVER['HTTP_X_API_VERSION'] : false;
 
-		// Check for the proper HTTP Parameters
-		$signature_args = array(
-			$_SERVER['HTTP_X_API_KEY'],
-			(int) $_SERVER['HTTP_X_API_TIMESTAMP'],
-			$_SERVER['REQUEST_METHOD'],
-			$_SERVER['REQUEST_URI'],
-			self::normalizedBody(),
-		);
-
-		$signature_gen = self::generateSignature( $signature_args, $user_secret );
+		$message = self::generateCanonicalRequest( $version );
+		$signature_gen = self::generateSignature( $message, $user_secret, $version );
 		$signature = $_SERVER['HTTP_X_API_SIGNATURE'];
 
 		if ( $signature_gen != $signature ) {
@@ -53,6 +47,38 @@ class JSON_Key_Auth {
 		}
 
 		return $user_id;
+	}
+
+	/**
+	 * Create a canonical request string to be signed.
+	 * 
+	 * @param  string $version Signature schema version. If no version is passed the original key auth schema is used.
+	 * @return string
+	 */
+	public static function generateCanonicalRequest( $version = null ) {
+		switch ( $version ) {
+			case 1:
+				$args = array(
+					$_SERVER['HTTP_X_API_KEY'],
+					(int) $_SERVER['HTTP_X_API_TIMESTAMP'],
+					$_SERVER['REQUEST_METHOD'],
+					$_SERVER['REQUEST_URI'],
+					self::normalizedBody(),
+				);
+				$message = implode( "\n", $args );
+				break;
+			default:
+				$args = array(
+					'api_key' => $_SERVER['HTTP_X_API_KEY'],
+					'timestamp' => $_SERVER['HTTP_X_API_TIMESTAMP'],
+					'request_method' => $_SERVER['REQUEST_METHOD'],
+					'request_uri' => $_SERVER['REQUEST_URI'],
+				);
+				$message = json_encode( $args );
+				break;
+		}
+
+		return $message;
 	}
 
 	/**
@@ -73,16 +99,26 @@ class JSON_Key_Auth {
 	}
 
 	/**
-	 * @param array $args The arguments used for generating the signature. They should be, in order:
-	 *  - API Key
-	 *  - Timestamp (passed in the request)
-	 *  - Request method
-	 *  - Request URI
+	 * Generate request signature.
+	 *
+	 * Sign the canonical request string with the shared secret associated
+	 * with the requesters user ID.
+	 *
+	 * @param string $message Canonical request string to sign.
 	 * @param string $secret The shared secret we are using to generate the hash.
 	 * @return string
 	 */
-	public static function generateSignature( $args, $secret ) {
-		return hash_hmac( 'sha256', implode( "\n", $args ), $secret );
+	public static function generateSignature( $message, $secret, $version ) {
+		switch ( $version ) {
+			case 1:
+				$signature = hash_hmac( 'sha256', $message, $secret );
+				break;
+			default:
+				$signature = md5( $message . $secret );
+				break;
+		}
+
+		return $signature;
 	}
 
 	/**
@@ -236,4 +272,3 @@ add_action( 'personal_options_update', array( 'JSON_Key_Auth', 'updateProfile' )
 
 add_action( 'show_user_profile', array( 'JSON_Key_Auth', 'editUser' ) );
 add_action( 'edit_user_profile', array( 'JSON_Key_Auth', 'editUser' ) );
-
