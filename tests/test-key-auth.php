@@ -37,13 +37,23 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 	}
 
 	/**
-	 * @dataProvider request_provider
+	 * @dataProvider success_provider
 	 */
-	public function test_auth_handler( $method, $uri, $body, $timestamp, $version = null ) {
+	public function test_auth_handler_pass( $method, $uri, $body, $timestamp, $version = null ) {
 		$key = $this->userapikey;
 		$secret = $this->usersecret;
 		$this->setup_request( $key, $secret, $method, $uri, $body, $timestamp, $version );
 		$this->assertEquals( $this->user, JSON_Key_Auth::authHandler( null ) );
+	}
+
+	/**
+	 * @dataProvider fail_provider
+	 */
+	public function test_auth_handler_fail( $method, $uri, $body, $timestamp, $version = null ) {
+		$key = $this->userapikey;
+		$secret = $this->usersecret;
+		$this->setup_request( $key, $secret, $method, $uri, $body, $timestamp, $version );
+		$this->assertEquals( false, JSON_Key_Auth::authHandler( null ) );
 	}
 
 	public function post_provider() {
@@ -55,12 +65,19 @@ class WP_TestKeyAuth extends WP_UnitTestCase {
 		);
 	}
 
-	public function request_provider() {
+	public function success_provider() {
 		return array(
 			'get'  => array( 'GET', '/wp-json/wp/v2/users/me', array(), time() ),
 			'get_v1'  => array( 'GET', '/wp-json/wp/v2/users/me', array(), time(), '1' ),
 			'post' => array( 'POST', '/wp-json/wp/v2/posts', array( 'title' => 'Foo', 'content' => 'Bar' ), time() ),
 			'post_v1' => array( 'POST', '/wp-json/wp/v2/posts', array( 'title' => 'Foo', 'content' => 'Bar' ), time(), '1' ),
+			'almost_elapsed'  => array( 'GET', '/wp-json/wp/v2/users/me', array(), time() - 299 ),
+		);
+	}
+
+	public function fail_provider() {
+		return array(
+			'elapsed'  => array( 'GET', '/wp-json/wp/v2/users/me', array(), time() - 301 ),
 		);
 	}
 

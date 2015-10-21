@@ -33,6 +33,14 @@ class JSON_Key_Auth {
 			return false;
 		}
 
+		// Ensure the requested timestamp is within a reasonable time
+		$timestamp = time();
+		$request_timestamp = intval( $_SERVER['HTTP_X_API_TIMESTAMP'] );
+		$reasonable_threshold = apply_filters( 'key_auth_reasonable_threshold', 5 * MINUTE_IN_SECONDS );
+		if ( abs( $timestamp - $request_timestamp ) > $reasonable_threshold ) {
+			return false;
+		}
+
 		$user_id = self::findUserIdByKey( $_SERVER['HTTP_X_API_KEY'] );
 		if ( ! $user_id ) {
 			return false;
